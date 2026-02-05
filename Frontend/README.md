@@ -143,7 +143,7 @@ yarn dev
 pnpm dev
 ```
 
-Mở [http://localhost:3000](http://localhost:3000) để xem ứng dụng.
+Mở [http://localhost:3008](http://localhost:3008) để xem ứng dụng.
 
 ### Build production
 
@@ -247,11 +247,12 @@ Nếu bạn gặp vấn đề hoặc có câu hỏi, vui lòng:
 2. Tạo issue mới với mô tả chi tiết
 3. Liên hệ team phát triển
 
----
 ## 👥 Tác Giả
 
 - **Author**: tan-qui
 - **Version**: 1.0.0
 - **License**: ISC
+
+---
 
 **Happy Coding! 🎉**

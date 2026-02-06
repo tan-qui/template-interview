@@ -2,7 +2,6 @@ import { RowDataPacket } from "mysql2/typings/mysql/lib/protocol/packets/RowData
 import { v4 as uuidv4 } from 'uuid';
 import { StatusCode } from "../Constants/Constant";
 import dbPool from "../Database/Mysql";
-// import logger from "../Helper/Logger";
 import { ReqChat } from "../Requests/Chat/ReqChat";
 import { ReqConversation } from "../Requests/Chat/ReqConversation";
 import { ReqMessage } from "../Requests/Chat/ReqMessage";
@@ -42,6 +41,7 @@ class ChatService {
       }
       // Step 3: Save user message to database
       await dbConn.query("INSERT INTO messages (conversationId, sender, content, createdAt) VALUES (?, ?, ?, ?)", [conversationId, 'USER', body.message.content, now]);
+      // Commit transaction
       await dbConn.commit();
       // Step 4: Get conversation history for context
       const [messageHistory] = await dbConn.query(
@@ -55,7 +55,6 @@ class ChatService {
         content: msg.content
       }));
       console.log('messages for OpenAI:', messages);
-      // Commit transaction
       // Step 5: Call OpenAI API
       let aiResponse: string;
       // Code fake to bypass OpenAI API key requirement

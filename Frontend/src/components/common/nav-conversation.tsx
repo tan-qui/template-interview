@@ -16,6 +16,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { ScrollArea } from "../ui/scroll-area";
 
 export const NavConversation = () => {
   const t = useTranslations();
@@ -27,6 +28,7 @@ export const NavConversation = () => {
     currentConversationId,
     setConversationId,
     setListConversation,
+    clearMessages
   } = useChatStore();
 
   useEffect(() => {
@@ -62,13 +64,14 @@ export const NavConversation = () => {
   };
 
   return (
-    <div className="p-2">
-      <SidebarMenu className="pb-4">
+    <ScrollArea className="h-full p-2 bg-muted">
+      <SidebarMenu className="pb-4 sticky top-0 bg-white z-10">
         <SidebarMenuItem>
           <SidebarMenuButton asChild>
             <Link href="/chat" className="bg-blue-500 text-white hover:bg-blue-600 rounded px-2 py-1 font-medium" 
             onClick={() => {
               setConversationId(null);
+              clearMessages();
             }}>
               <span>+ {t("New Chat")}</span>
             </Link>
@@ -85,6 +88,7 @@ export const NavConversation = () => {
               )}
                 onClick={() => {
                   setConversationId(item.id);
+                  clearMessages();
                 }}
               >
                 <span>{item.title || `Unknown`}</span>
@@ -93,6 +97,6 @@ export const NavConversation = () => {
           </SidebarMenuItem>
         </SidebarMenu>
       ))}
-    </div>
+    </ScrollArea>
   );
 };

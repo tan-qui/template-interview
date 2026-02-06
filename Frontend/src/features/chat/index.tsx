@@ -8,6 +8,7 @@ import { ROLE, STATUS_CODE } from "@/constants/enums";
 import { helper } from "@/helper";
 import { useChatStore } from "@/store/chat-store";
 import { Plus, Send } from "lucide-react";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -16,6 +17,7 @@ import { BotLoading } from "./components/bot-loading";
 import { Intro } from "./components/intro";
 import { Message } from "./components/message";
 import { IFileUpload, IMessage, IReqChatDTO, IReqMessageDTO } from "./type";
+import { cn } from "@/lib/utils";
 
 export const ChatSuspense = ({ conversationId }: { conversationId?: string }) => {
   return (
@@ -50,6 +52,7 @@ const Chat = ({ conversationId }: { conversationId?: string }) => {
   const [inputValue, setInputValue] = useState("");
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [selectedFiles, setSelectedFiles] = useState<IFileUpload[]>([]);
 
   useEffect(() => {
@@ -76,6 +79,12 @@ const Chat = ({ conversationId }: { conversationId?: string }) => {
       }
     }
   }, [messages]);
+
+  // useEffect(() => {
+  //   if (!textareaRef.current) return;
+  //   textareaRef.current.style.height = "auto";
+  //   textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+  // }, [inputValue]);
 
   const getInitialMessage = async () => {
     try {
@@ -109,7 +118,6 @@ const Chat = ({ conversationId }: { conversationId?: string }) => {
 
   // Chat service instance
   const handleSendMessage = async () => {
-    // console.log("handleSendMessage called", selectedFiles);
     if (!inputValue.trim() && selectedFiles.length === 0) return;
     const currentUserId = helper.getUserId();
     const userMessage: IMessage = {
@@ -119,6 +127,9 @@ const Chat = ({ conversationId }: { conversationId?: string }) => {
     };
     addMessage(userMessage);
     setInputValue("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "40px";
+    }
     setLoading(true);
     try {
       const body: IReqChatDTO = {
@@ -194,6 +205,16 @@ const Chat = ({ conversationId }: { conversationId?: string }) => {
     }
   };
 
+  const resizeTextarea = (element: HTMLTextAreaElement | null, value: string) => {
+    if (!element) return;
+    if (!value.includes("\n")) {
+      element.style.height = "40px";
+      return;
+    }
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -256,45 +277,69 @@ const Chat = ({ conversationId }: { conversationId?: string }) => {
       {/* Chat Input Area - Fixed at bottom */}
       <div className="absolute bottom-0 left-0 right-0 border-t bg-white/95 backdrop-blur-sm p-4">
         <div className="max-w-3xl mx-auto">
-
           {selectedFiles.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-2">
               {selectedFiles.map((file, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 text-sm"
+                  className={cn("flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1 text-sm", file.mimeType?.startsWith("image/") ? "" : "border")}
                 >
-                  <span className="truncate max-w-32">{file.filename}</span>
-                  <button
-                    onClick={() => removeFile(index)}
-                    className="text-gray-500 hover:text-red-500"
-                  >
-                    ×
-                  </button>
+                  {file.mimeType?.startsWith("image/") ? (
+                    <div className="relative h-10 w-10 flex-shrink-0">
+                      <div className="h-10 w-10 overflow-hidden rounded">
+                        <Image
+                          src={file.data}
+                          alt={file.filename}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="absolute -right-2 -top-2 h-5 w-5 rounded-full tr bg-gray-100 text-red-500 border shadow hover:text-red-600 "
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="truncate max-w-32">{file.filename}</span>
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        ×
+                      </button>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          <div className="flex gap-3 items-center">
+          <div className="flex items-end gap-2 rounded-2xl border bg-white px-2 py-1 shadow-sm focus-within:ring-2 focus-within:ring-primary/30">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
-              className="flex-shrink-0 h-10 w-10"
+              className="h-10 w-10 rounded-xl"
               disabled={isLoading}
             >
               <Plus className="h-4 w-4" />
             </Button>
-            <div className="flex-1 relative">
+            <div className="flex-1">
               <Textarea
+                ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => {
                   setInputValue(e.target.value);
+                  resizeTextarea(e.target, e.target.value);
                 }}
+                style={{ height: 40 }}
                 onKeyDown={handleKeyPress}
                 placeholder={t("Type your message here")}
-                className="min-h-[40px] max-h-[200px] resize-none pr-12"
+                className="min-h-[40px] resize-none overflow-hidden border-0 bg-transparent px-2 py-2 leading-5 focus-visible:ring-0 "
                 disabled={isLoading}
               />
             </div>
@@ -302,7 +347,7 @@ const Chat = ({ conversationId }: { conversationId?: string }) => {
             <Button
               onClick={handleSendMessage}
               disabled={(!inputValue.trim() && selectedFiles.length === 0) || isLoading}
-              className="flex-shrink-0 h-10 px-4"
+              className="h-10 px-4 rounded-xl"
             >
               <Send className="h-4 w-4 mr-2" />
               {isLoading ? t("Generating") : t("Send")}

@@ -26,7 +26,7 @@ export const Message = () => {
 
             <div className={`flex flex-col max-w-[85%] ${message.sender == ROLE.USER ? "items-end" : "items-start"}`}>
               <Card className={`${message.sender == ROLE.USER
-                ? "bg-blue-500 text-white border-blue-500"
+                ? "bg-gray-200 border-gray-200"
                 : "bg-gray-50 border-gray-200"
                 } shadow-sm py-2`}>
                 <CardContent className="p-2">
